@@ -5,9 +5,9 @@ import obs_config
 
 
 class Note:
-    def __init__(self, timestamp:str, text:str):
-        self.timestamp:str = timestamp
-        self.text:str = text
+    def __init__(self, obs_timestamp:str, note_text:str):
+        self.timestamp:str = obs_timestamp
+        self.text:str = note_text
 
     def note_info(self):
         print(f"{self.timestamp}:{self.text}")
@@ -24,7 +24,7 @@ obs_record_status = client.send("GetRecordStatus", raw=True)
 if obs_record_status['outputActive']:
     timestamp = obs_record_status['outputTimecode']
     text = "tratata"
-    note = Note(timestamp=timestamp, text=text)
+    note = Note(obs_timestamp=timestamp, note_text=text)
     note.note_info()
 else:
     print("record is not active")
