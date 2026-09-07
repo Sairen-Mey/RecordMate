@@ -1,4 +1,6 @@
 import obsws_python as obs
+from obsws_python import ReqClient
+
 import obs_config
 
 
@@ -7,18 +9,28 @@ class Note:
         self.timestamp:str = timestamp
         self.text:str = text
 
+    def note_info(self):
+        print(f"{self.timestamp}:{self.text}")
 
-client = obs.ReqClient(host=obs_settings.host, port=obs_settings.port, password=obs_settings.password, timeout=3)
+client = obs.ReqClient(
+    host=obs_config.host,
+    port=obs_config.port,
+    password=obs_config.password,
+    timeout=3
+)
+
+obs_record_status = client.send("GetRecordStatus", raw=True)
+
+if obs_record_status['outputActive']:
+    timestamp = obs_record_status['outputTimecode']
+    text = "tratata"
+    note = Note(timestamp=timestamp, text=text)
+    note.note_info()
+else:
+    print("record is not active")
 
 
 
-
-obs_record_status1 = client.send("GetRecordStatus", raw=True)
-timestamp = obs_record_status1['outputTimecode']
-text = str(input())
-note = Note(timestamp=timestamp, text=text)
-
-print(f"time: {note.timestamp} | text: {note.text}")
 
 
 #{'outputActive': False, 'outputBytes': 1275574, 'outputDuration': 0, 'outputPaused': False, 'outputTimecode': '00:00:00.000'}
