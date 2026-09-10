@@ -26,7 +26,7 @@ while True:
             if range_note[idishnik].obs_timestamp_start is None and range_note[idishnik].obs_timestamp_end is None:
                 range_note[idishnik] = RangeNote()
             if range_note[idishnik].obs_timestamp_start is None:
-                text = input("\n")
+                text = input("text:")
                 range_note[idishnik].note_text=text
                 range_note[idishnik].set_obs_time_start(obs_timestamp_start=time)
             else:
