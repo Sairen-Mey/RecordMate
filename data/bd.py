@@ -71,6 +71,14 @@ def get_note_by_id(note_id:int):
         return row
 
 
+def update_note_by_id(note_id:int, note:Note):
+    with get_conn() as conn:
+        conn.execute("""
+            UPDATE notes
+            SET text = ?
+            WHERE note_id = ?
+        """, (note.text, note_id))
+
 
 def save_range_note_to_db(range_note:RangeNote):
     with get_conn() as conn:
