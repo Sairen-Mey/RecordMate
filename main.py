@@ -14,7 +14,7 @@ while True:
         if obs_record_status['outputActive']:
             timestamp = obs_record_status['outputTimecode']
             text = input("text:")
-            note = Note(obs_timestamp=timestamp, note_text=text)
+            note = Note(obs_timecode=timestamp, note_text=text)
             save_note(note=note)
         else:
             print("record is not active")
@@ -23,14 +23,14 @@ while True:
         obs_record_status = obs_reader.get_record_status()
         if obs_record_status['outputActive']:
             time = obs_record_status['outputTimecode']
-            if range_note[idishnik].obs_timestamp_start is None and range_note[idishnik].obs_timestamp_end is None:
+            if range_note[idishnik].obs_timecode_start is None and range_note[idishnik].obs_timecode_end is None:
                 range_note[idishnik] = RangeNote()
-            if range_note[idishnik].obs_timestamp_start is None:
+            if range_note[idishnik].obs_timecode_start is None:
                 text = input("text:")
-                range_note[idishnik].note_text=text
-                range_note[idishnik].set_obs_time_start(obs_timestamp_start=time)
+                range_note[idishnik].text=text
+                range_note[idishnik].set_obs_time_start(obs_timecode_start=time)
             else:
-                range_note[idishnik].set_obs_time_end(obs_timestamp_end=time)
+                range_note[idishnik].set_obs_time_end(obs_timecode_end=time)
         else:
             print("record is not active")
             break
