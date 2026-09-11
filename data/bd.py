@@ -1,6 +1,5 @@
 import sqlite3
 from pathlib import Path
-import os
 from classes import Note, RangeNote
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -8,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = (BASE_DIR.parent / "data" / "RM.db").resolve()
 
 def get_conn() -> sqlite3.Connection:
-    print("DB FILE:", os.path.abspath(DB_PATH))
+    # print("DB FILE:", os.path.abspath(DB_PATH))
     DB_PATH.parent.mkdir(parents=True,exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -29,9 +28,9 @@ def init_db() -> None:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS range_notes (
                 range_note_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                text TEXT NOT NULL,
                 start_timecode TEXT NOT NULL,
-                end_timecode TEXT NOT NULL
+                text TEXT,
+                end_timecode TEXT 
             );
         """)
 
@@ -49,6 +48,29 @@ def save_note_to_db(note:Note) -> int:
 
         return cursor.lastrowid
 
+def get_notes():
+    with get_conn() as conn:
+        cursor = conn.execute("""
+            SELECT note_id, text, timecode
+            FROM notes
+        """)
+
+        rows = cursor.fetchall()
+        return rows
+
+def get_note_by_id(note_id:int):
+    with get_conn() as conn:
+        cursor = conn.execute("""
+            SELECT note_id, text, timecode
+            FROM notes
+            WHERE note_id = ?
+        """,
+        (note_id,)
+        )
+        row = cursor.fetchone()
+        return row
+
+
 
 def save_range_note_to_db(range_note:RangeNote):
     with get_conn() as conn:
@@ -62,15 +84,15 @@ def save_range_note_to_db(range_note:RangeNote):
 
         conn.commit()
 
-def get_notes():
+def update_range_note_by_id(range_note_id:int, range_note:RangeNote):
     with get_conn() as conn:
-        cursor = conn.execute("""
-            SELECT note_id, text, timecode
-            FROM notes
-        """)
+        conn.execute("""
+            UPDATE range_notes 
+            SET end_timecode = ?, text = ?
+            WHERE range_note_id = ?
+        """, (range_note.obs_timecode_end, range_note.text, range_note_id))
 
-        rows = cursor.fetchall()
-        return rows
+        conn.commit()
 
 def get_range_notes():
     with get_conn() as conn:
@@ -82,18 +104,6 @@ def get_range_notes():
         rows = cursor.fetchall()
         return rows
 
-
-def get_note_by_id(note_id:int):
-    with get_conn() as conn:
-        cursor = conn.execute("""
-            SELECT note_id, text, timecode
-            FROM notes
-            WHERE note_id = ?
-        """,
-        (note_id,)
-        )
-        row = cursor.fetchone()
-        return row
 
 def get_range_note_by_id(range_note_id:int):
     with get_conn() as conn:
@@ -112,8 +122,4 @@ def get_range_note_by_id(range_note_id:int):
 
 if __name__ == '__main__':
     # init_db()
-    note = Note("00:00:00.111", "tettetetetetett")
-    save_note_to_db(note)
-    n2 = get_note_by_id(1)
-    print(n2['text'], n2['timecode'])
-    # print("DB:", DB_PATH.resolve())
+    pass
