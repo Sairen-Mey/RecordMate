@@ -1,8 +1,5 @@
 
 
-
-
-
 class Note:
     def __init__(self, obs_timecode:str, note_text:str):
         self.timecode:str = obs_timecode
