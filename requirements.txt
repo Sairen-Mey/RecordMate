@@ -1,2 +1,3 @@
 obsws_python
 python-dotenv
+PySide6

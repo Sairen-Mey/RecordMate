@@ -4,6 +4,12 @@ import obs_config
 
 class OBSClient:
     def __init__(self):
+    #     self.client = None
+    #     self.event_client = None
+    #     self.connect()
+    #
+    # def connect(self):
+
         self.client = obs.ReqClient(
             host=obs_config.host,
             port=obs_config.port,
@@ -16,7 +22,10 @@ class OBSClient:
             password=obs_config.password,
         )
 
+    # def reconnect(self):
+    #     self.connect()
+
     def get_record_status(self):
         return self.client.send("GetRecordStatus", raw=True)
 
-obs_reader = OBSClient()
+obs_client = OBSClient()
