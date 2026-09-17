@@ -27,3 +27,16 @@ class RangeNote:
 
     def note_info(self):
         print(f"{self.obs_timecode_start}-{self.obs_timecode_end}:{self.text}")
+
+
+class Session:
+    def __init__(self, session_id:int, started_at:str, closed_at:str|None = None):
+        self.session_id:int = session_id
+        self.started_at:str = started_at
+        self.closed_at:str = closed_at if closed_at is not None else None
+
+    def session_info(self):
+        if self.closed_at is None:
+            print(f"[{self.session_id}] {self.started_at} - [EMPTY]")
+        else:
+            print(f"[{self.session_id}] {self.started_at} - {self.closed_at}")
