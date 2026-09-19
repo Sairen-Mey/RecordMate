@@ -58,3 +58,4 @@ def update_qt_notes_lits(notes_list:list[Note], list_widget:QListWidget):
             f"[{note.timecode}] {note.text}"
         )
         list_widget.addItem(item)
+
