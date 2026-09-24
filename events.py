@@ -1,4 +1,4 @@
-from qt_signals import obs_bridge
+from QT.qt_signals import obs_bridge
 from data.bd import create_session,close_session
 
 current_session_id: int|None = None

@@ -1,6 +1,6 @@
 import sqlite3
 
-from classes import RangeNote
+from models.classes import RangeNote
 
 
 def sql_to_range_note(row:sqlite3.Row) -> RangeNote:

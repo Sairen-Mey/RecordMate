@@ -1,6 +1,6 @@
 import sqlite3
 from pathlib import Path
-from classes import Note, RangeNote
+from models.classes import Note, RangeNote
 
 BASE_DIR = Path(__file__).resolve().parent
 

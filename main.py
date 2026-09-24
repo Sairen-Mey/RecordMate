@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QApplication
 )
-from qt_ui import MainWindow
+from QT.qt_ui import MainWindow
 
 
 
