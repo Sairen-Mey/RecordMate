@@ -136,7 +136,7 @@ def update_note_by_id(note_id:int, note:Note):
 
 def save_range_note_to_db(range_note:RangeNote, session_id:int):
     with get_conn() as conn:
-        conn.execute("""
+        cursor = conn.execute("""
             INSERT INTO range_notes (session_id, text, start_timecode, end_timecode)
             VALUES (?, ?, ?, ?)
         """,(
@@ -146,6 +146,8 @@ def save_range_note_to_db(range_note:RangeNote, session_id:int):
             range_note.obs_timecode_end))
 
         conn.commit()
+
+        return cursor.lastrowid
 
 def update_range_note_by_id(range_note_id:int, range_note:RangeNote):
     with get_conn() as conn:

@@ -1,8 +1,9 @@
 import events
 from client import obs_client
-from classes import Note
+from classes import Note, RangeNote
 from PySide6.QtCore import Qt
 from qt_signals import obs_bridge
+from range_note_page import RangeNotePage
 from session_page import SessionPage
 from home_page import HomePage
 from note_page import  NotePage
@@ -10,7 +11,7 @@ from db_to_qt import (
     db_session_to_qt_list,
     update_qt_sessions_list,
     db_notes_to_qt,
-    update_qt_notes_lits
+    update_qt_notes_list, db_range_notes_to_qt, update_qt_range_notes_list
 )
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStackedWidget,
     QLabel,
+    QListWidgetItem
 )
 from data.bd import (
     create_session,
@@ -39,9 +41,7 @@ from data.bd import (
     get_notes,
     get_note_by_id
 )
-
-
-
+from sql_to_class import sql_to_range_note
 
 
 class MainWindow(QMainWindow):
@@ -80,14 +80,18 @@ class MainWindow(QMainWindow):
 
         #RANGE NOTE PAGE
 
+        self.range_note_page = RangeNotePage()
+
         #___________
 
+        self.selected_range_note_item = Note
 
         # ADD PAGES TO STACK
 
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.session_page)
         self.stack.addWidget(self.note_page)
+        self.stack.addWidget(self.range_note_page)
 
         #___________________
 
@@ -96,7 +100,7 @@ class MainWindow(QMainWindow):
         self.note_page.add_button.clicked.connect(self.add_note)
         self.note_page.input_field.returnPressed.connect(self.add_note)
         self.note_page.notes_list.itemClicked.connect(self.note_clicked)
-
+        self.range_note_page.notes_list.itemClicked.connect(self.range_note_clicked)
         self.session_page.session_list.itemClicked.connect(self.update_notes_list)
 
         self.home_page.sessions_button.clicked.connect(
@@ -107,7 +111,27 @@ class MainWindow(QMainWindow):
             self.open_note_page
         )
 
+        self.home_page.range_note_button.clicked.connect(
+            self.open_range_note_page
+        )
+
+        self.range_note_page.add_button.clicked.connect(
+            self.add_range_note
+        )
+
+        self.range_note_page.notes_list.itemClicked.connect(
+            self.selected_range_note
+        )
+
+        self.range_note_page.close_note_button.clicked.connect(
+            self.close_selected_range_note
+        )
+
         self.note_page.back_home_page.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.home_page)
+        )
+
+        self.range_note_page.back_home_page.clicked.connect(
             lambda: self.stack.setCurrentWidget(self.home_page)
         )
 
@@ -117,15 +141,78 @@ class MainWindow(QMainWindow):
 
 
 
+
+    def selected_range_note(self, item):
+        self.selected_range_note_item = item
+
+        self.range_note_page.current_note.setText(
+            f"selected: {item.text()}"
+        )
+
+    def close_selected_range_note(self):
+        if self.selected_range_note_item is None:
+            return
+
+        item = self.selected_range_note_item
+
+        range_note_id = item.data(Qt.ItemDataRole.UserRole)
+
+        range_note = sql_to_range_note(get_range_note_by_id(range_note_id=range_note_id))
+
+        if range_note.obs_timecode_end is not None:
+            return
+
+        status = obs_client.get_record_status()
+
+        if not status["outputActive"]:
+            self.range_note_page.current_note.setText(
+                "OBS is not recording"
+            )
+            return
+
+        timecode = status["outputTimecode"]
+
+        range_note.set_obs_time_end(obs_timecode_end=timecode)
+
+        update_range_note_by_id(range_note_id=range_note_id, range_note=range_note)
+
+        item.setText(
+            f"[{range_note.obs_timecode_start}|{range_note.obs_timecode_end}]"
+            f"{range_note.text}"
+        )
+
+        self.range_note_page.current_note.setText(
+            f"[{range_note.obs_timecode_start}|{range_note.obs_timecode_end}]"
+            f"{range_note.text}"
+        )
+
+    def open_range_note_page(self):
+        self.range_note_page.notes_list.clear()
+        self.range_note_page.current_note.setText("selected: none")
+        self.stack.setCurrentWidget(self.range_note_page)
+
+    def open_note_page(self):
+        self.note_page.notes_list.clear()
+        self.note_page.current_note.setText("selected: none")
+        self.stack.setCurrentWidget(self.note_page)
+
+    def update_range_note_list(self, item):
+        session_id = item.data(Qt.ItemDataRole.UserRole)
+
+        range_notes_list = db_range_notes_to_qt(session_id=session_id)
+
+        update_qt_range_notes_list(range_notes_list=range_notes_list, list_widget=self.range_note_page.notes_list)
+
+        self.range_note_page.current_note.setText("selected: none")
+
+        self.stack.setCurrentWidget(self.range_note_page)
+
     def update_notes_list(self, item):
         session_id = item.data(Qt.ItemDataRole.UserRole)
 
         notes_list = db_notes_to_qt(session_id)
 
-        update_qt_notes_lits(
-            notes_list=notes_list,
-            list_widget=self.note_page.notes_list
-        )
+        update_qt_notes_list(notes_list=notes_list, list_widget=self.note_page.notes_list)
 
         self.note_page.current_note.setText("selected: none")
 
@@ -141,11 +228,82 @@ class MainWindow(QMainWindow):
 
         self.stack.setCurrentWidget(self.session_page)
 
+    def range_note_clicked(self, item):
+        self.range_note_page.current_note.setText(
+            f"selecteed: {item.text()}"
+                f"{item.data(Qt.ItemDataRole.UserRole)}"
+
+        )
+
     def note_clicked(self, item) -> None:
         self.note_page.current_note.setText(
             f"selected: {item.text()} | "
             f"{item.data(Qt.ItemDataRole.UserRole)}"
         )
+
+    def add_range_note(self):
+        if events.current_session_id is None:
+            self.range_note_page.current_note.setText("No active session")
+            return
+
+        try:
+            status = obs_client.get_record_status()
+
+            if not status["outputActive"]:
+                self.note_page.current_note.setText("OBS is not recording")
+                return
+
+            timecode = status["outputTimecode"]
+
+            range_note = RangeNote()
+
+            range_note.set_obs_time_start(obs_timecode_start=timecode)
+        except Exception as err:
+            self.range_note_page.current_note.setText(f"Error: {err}")
+            return
+
+        range_note_id = save_range_note_to_db(range_note=range_note, session_id=events.current_session_id)
+
+        range_note.set_range_note_id(range_note_id=range_note_id)
+
+        item = QListWidgetItem(
+            f"[{range_note.obs_timecode_start}|{range_note.obs_timecode_end}] "
+            f"{range_note.text}"
+        )
+
+        item.setData(
+            Qt.ItemDataRole.UserRole,
+            range_note_id
+        )
+
+        self.range_note_page.notes_list.addItem(item)
+
+        self.range_note_page.input_field.clear()
+
+    def close_range_note(self, item:QListWidgetItem):
+        range_note_id:int = item.data(Qt.ItemDataRole.UserRole)
+        print("ID FROM ITEM:", range_note_id)
+
+        range_note = sql_to_range_note(get_range_note_by_id(range_note_id=range_note_id))
+        print("FROM DB:", range_note)
+        if range_note.obs_timecode_end is None:
+            status = obs_client.get_record_status()
+
+            if not status["outputActive"]:
+                self.note_page.current_note.setText("OBS is not recording")
+                return
+
+            timecode = status["outputTimecode"]
+
+            range_note.set_obs_time_end(obs_timecode_end=timecode)
+
+            update_range_note_by_id(range_note_id=range_note_id, range_note=range_note)
+
+            item.setText(
+                f"[{range_note.obs_timecode_start}|{range_note.obs_timecode_end}] "
+                f"{range_note.text}"
+            )
+
 
     def add_note(self):
         text = self.note_page.input_field.text().strip()
@@ -203,10 +361,7 @@ class MainWindow(QMainWindow):
         except Exception:
             obs_bridge.status_changed.emit(False, False)
 
-    def open_note_page(self):
-        self.note_page.notes_list.clear()
-        self.note_page.current_note.setText("selected: none")
-        self.stack.setCurrentWidget(self.note_page)
+
 
 
 obs_client.event_client.callback.register(

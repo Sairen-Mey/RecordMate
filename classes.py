@@ -12,9 +12,14 @@ class Note:
 
 class RangeNote:
     def __init__(self):#note_text:str, obs_timecode_start:str|None = None,  obs_timecode_end:str|None = None
+        self.range_note_id: int|None= None
         self.obs_timecode_start:str
         self.obs_timecode_end:str|None = None
         self.text:str|None = None
+
+
+    def set_range_note_id(self, range_note_id:int):
+        self.range_note_id = range_note_id
 
     def set_obs_time_start(self, obs_timecode_start:str):
         self.obs_timecode_start = obs_timecode_start
