@@ -12,6 +12,12 @@ class OBSManager:
 
     def connect(self) -> bool:
         try:
+            if self.event_client is not None:
+                self.event_client.disconnect()
+
+            if self.client is not None:
+                self.client.disconnect()
+
             self.client = obs.ReqClient(
                 host=obs_config.host,
                 port=obs_config.port,
@@ -23,6 +29,8 @@ class OBSManager:
                 port=obs_config.port,
                 password=obs_config.password,
             )
+
+
 
             return True
 
@@ -47,13 +55,13 @@ class OBSManager:
 
         return bool(status["outputActive"])
 
-    def is_obs_recording(self) -> bool:
-        status = self.get_record_status()
-
-        if status is None:
-            return False
-
-        return
+    # def is_obs_recording(self) -> bool:
+    #     status = self.get_record_status()
+    #
+    #     if status is None:
+    #         return False
+    #
+    #     return
 
     def get_output_timecode(self) -> str:
         status = self.get_record_status()

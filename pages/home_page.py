@@ -43,6 +43,8 @@ class HomePage(QWidget):
 
         self.note_button = QPushButton("note")
 
+        self.reconnect_button= QPushButton("reconnect ot obs")
+
         self.range_note_button = QPushButton("range note")
 
         # input_layout = QHBoxLayout()
@@ -57,3 +59,4 @@ class HomePage(QWidget):
         layout.addWidget(self.sessions_button)
         layout.addWidget(self.note_button)
         layout.addWidget(self.range_note_button)
+        layout.addWidget(self.reconnect_button)
